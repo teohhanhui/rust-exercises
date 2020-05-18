@@ -61,8 +61,8 @@ impl Temperature {
         const CELSIUS_TO_FAHRENHEIT_OFFSET: f32 = 32.0;
         const CELSIUS_TO_KELVIN_OFFSET: f32 = 273.15;
 
-        let value = match (self.unit, unit) {
-            (ref x, ref y) if x == y => return Ok(*self),
+        let value = match (&self.unit, &unit) {
+            (from, to) if from == to => return Ok(*self),
             (TemperatureUnit::Celsius, TemperatureUnit::Fahrenheit) => {
                 self.value * CELSIUS_TO_FAHRENHEIT_RATIO + CELSIUS_TO_FAHRENHEIT_OFFSET
             }
@@ -85,12 +85,7 @@ impl Temperature {
                     .convert(TemperatureUnit::Fahrenheit)?
                     .value
             }
-            _ => {
-                return Err(TemperatureConversionError::NotSupported {
-                    from: self.unit,
-                    to: unit,
-                })
-            }
+            (&from, &to) => return Err(TemperatureConversionError::NotSupported { from, to }),
         };
 
         Ok(Self { value, unit })
@@ -117,22 +112,18 @@ impl FromStr for Temperature {
         static TEMPERATURE_REGEX: Lazy<Regex> =
             Lazy::new(|| Regex::new(&TEMPERATURE_PATTERN).unwrap());
 
-        let caps = match TEMPERATURE_REGEX.captures(s) {
-            Some(caps) => caps,
-            None => {
-                return Err(ParseTemperatureError::Invalid);
-            }
-        };
+        let caps = TEMPERATURE_REGEX
+            .captures(s)
+            .ok_or_else(|| ParseTemperatureError::Invalid)?;
         let value = &caps["value"];
-        let value: f32 = match value.replace("−", "-").parse() {
-            Ok(v) => v,
-            Err(err) => {
-                return Err(ParseTemperatureError::Parse {
+        let value: f32 =
+            value
+                .replace("−", "-")
+                .parse()
+                .map_err(|err| ParseTemperatureError::Parse {
                     source: err,
                     value: String::from(value),
-                });
-            }
-        };
+                })?;
         let unit = &caps["unit"];
         let unit = TemperatureUnit::iter()
             .find(|u| u.symbol_regex().is_match(unit))
@@ -189,18 +180,15 @@ fn main() {
     } else {
         input.trim()
     };
-    let input: Temperature = match input.parse() {
-        Ok(t) => t,
-        Err(err) => {
-            eprintln!("Invalid input: {}", err);
-            process::exit(1);
-        }
-    };
+    let input: Temperature = input.parse().unwrap_or_else(|err| {
+        eprintln!("Invalid input: {}", err);
+        process::exit(1);
+    });
 
     println!("{}", input);
 
     let outputs = TemperatureUnit::iter()
-        .filter(|u| u != &input.unit)
+        .filter(|u| *u != input.unit)
         .map(|u| input.convert(u))
         .filter(|r| match r {
             Ok(_) => true,
