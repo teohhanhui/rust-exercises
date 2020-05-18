@@ -1,5 +1,5 @@
 use err_derive::Error;
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use regex::Regex;
 use std::fmt;
 use std::io::{self, BufRead};
@@ -30,11 +30,10 @@ impl TemperatureUnit {
         const FAHRENHEIT_PATTERN: &str = r"°?F";
         const KELVIN_PATTERN: &str = r"K";
 
-        lazy_static! {
-            static ref CELSIUS_REGEX: Regex = Regex::new(CELSIUS_PATTERN).unwrap();
-            static ref FAHRENHEIT_REGEX: Regex = Regex::new(FAHRENHEIT_PATTERN).unwrap();
-            static ref KELVIN_REGEX: Regex = Regex::new(KELVIN_PATTERN).unwrap();
-        }
+        static CELSIUS_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(CELSIUS_PATTERN).unwrap());
+        static FAHRENHEIT_REGEX: Lazy<Regex> =
+            Lazy::new(|| Regex::new(FAHRENHEIT_PATTERN).unwrap());
+        static KELVIN_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(KELVIN_PATTERN).unwrap());
 
         match self {
             TemperatureUnit::Celsius => &CELSIUS_REGEX,
@@ -106,16 +105,17 @@ impl FromStr for Temperature {
             return Err(ParseTemperatureError::Empty);
         }
 
-        lazy_static! {
-            static ref TEMPERATURE_PATTERN: String = format!(
+        static TEMPERATURE_PATTERN: Lazy<String> = Lazy::new(|| {
+            format!(
                 r"(?i)(?P<value>(?:-|−)?\d+(?:\.\d+)?)\s?(?P<unit>{})",
                 TemperatureUnit::iter()
                     .map(|u| u.symbol_regex().to_string())
                     .collect::<Vec<String>>()
                     .join("|")
-            );
-            static ref TEMPERATURE_REGEX: Regex = Regex::new(&TEMPERATURE_PATTERN).unwrap();
-        }
+            )
+        });
+        static TEMPERATURE_REGEX: Lazy<Regex> =
+            Lazy::new(|| Regex::new(&TEMPERATURE_PATTERN).unwrap());
 
         let caps = match TEMPERATURE_REGEX.captures(s) {
             Some(caps) => caps,
@@ -204,7 +204,7 @@ fn main() {
         .map(|u| input.convert(u))
         .filter(|r| match r {
             Ok(_) => true,
-            Err(TemperatureConversionError::NotSupported { from: _, to: _ }) => false,
+            Err(TemperatureConversionError::NotSupported { .. }) => false,
             // Err(err) => panic!("Temperature conversion failed: {:?}", err),
         })
         .collect::<Result<Vec<Temperature>, TemperatureConversionError>>()
