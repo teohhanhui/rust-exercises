@@ -7,7 +7,7 @@ fn fibonacci_recursion_naive(n: u8) -> u128 {
     match n {
         0 => 0,
         1 => 1,
-        _ => fibonacci_recursion_naive(n - 2) + fibonacci_recursion_naive(n - 1),
+        _ => fibonacci_recursion_naive(n - 1) + fibonacci_recursion_naive(n - 2),
     }
 }
 
@@ -15,7 +15,7 @@ fn fibonacci_iter(n: u8) -> u128 {
     match (0..=n).fold((0, 0), |(fib_nm1, fib_nm2), n| match n {
         0 => (0, 0),
         1 => (1, 0),
-        _ => (fib_nm2 + fib_nm1, fib_nm1),
+        _ => (fib_nm1 + fib_nm2, fib_nm1),
     }) {
         (n, _) => n,
     }
@@ -90,6 +90,5 @@ fn main() {
             })
     };
 
-    println!("F({})", n);
-    println!("= {}", f(n));
+    println!("F({}) = {}", n, f(n));
 }
