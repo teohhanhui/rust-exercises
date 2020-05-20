@@ -1,6 +1,7 @@
 use im::ordmap;
 use im::ordmap::OrdMap;
 use std::io::{self, BufRead};
+use std::iter;
 use std::process;
 
 fn fibonacci_recursion_naive(n: u8) -> u128 {
@@ -11,7 +12,7 @@ fn fibonacci_recursion_naive(n: u8) -> u128 {
     }
 }
 
-fn fibonacci_iter(n: u8) -> u128 {
+fn fibonacci_iterator_fold(n: u8) -> u128 {
     match (0..=n).fold((0, 0), |(fib_nm1, fib_nm2), n| match n {
         0 => (0, 0),
         1 => (1, 0),
@@ -21,15 +22,34 @@ fn fibonacci_iter(n: u8) -> u128 {
     }
 }
 
+fn fibonacci_iterator_zip_recursion(n: u8) -> u128 {
+    fn fib() -> Box<dyn Iterator<Item = u128>> {
+        Box::new(
+            iter::once(0 as u128).chain(iter::once(1 as u128)).chain(
+                iter::once_with(|| {
+                    fib()
+                        .zip(fib().skip(1))
+                        .map(|(fib_nm2, fib_nm1)| fib_nm1 + fib_nm2)
+                })
+                .flatten(),
+            ),
+        )
+    }
+
+    fib().nth(usize::from(n)).unwrap()
+}
+
 fn main() {
     const DEFAULT_N: u8 = 8;
-    const DEFAULT_F: fn(u8) -> u128 = fibonacci_iter;
+    const DEFAULT_F: fn(u8) -> u128 = fibonacci_iterator_fold;
 
-    // let fibonacci_fns: OrdMap<&str, fn(u8) -> u128> =
-    //     ordmap! {"recursion_naive" => fibonacci_recursion_naive, "iter" => fibonacci_iter};
     let fibonacci_fns: OrdMap<&str, fn(u8) -> u128> = ordmap! {};
-    let fibonacci_fns = fibonacci_fns.update("recursion_naive", fibonacci_recursion_naive);
-    let fibonacci_fns = fibonacci_fns.update("iter", fibonacci_iter);
+    let fibonacci_fns = fibonacci_fns.update("recursion (naive)", fibonacci_recursion_naive);
+    let fibonacci_fns = fibonacci_fns.update("iterator (fold)", fibonacci_iterator_fold);
+    let fibonacci_fns = fibonacci_fns.update(
+        "iterator (zip + recursion)",
+        fibonacci_iterator_zip_recursion,
+    );
 
     println!("n [{}]:", DEFAULT_N);
 
