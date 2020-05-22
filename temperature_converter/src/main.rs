@@ -56,13 +56,13 @@ struct Temperature {
 }
 
 impl Temperature {
-    fn convert(&self, unit: TemperatureUnit) -> Result<Self, TemperatureConversionError> {
+    fn convert(self, unit: TemperatureUnit) -> Result<Self, TemperatureConversionError> {
         const CELSIUS_TO_FAHRENHEIT_RATIO: f32 = 1.8;
         const CELSIUS_TO_FAHRENHEIT_OFFSET: f32 = 32.0;
         const CELSIUS_TO_KELVIN_OFFSET: f32 = 273.15;
 
-        let value = match (&self.unit, &unit) {
-            (from, to) if from == to => return Ok(*self),
+        let value = match (self.unit, unit) {
+            (from, to) if from == to => return Ok(self),
             (TemperatureUnit::Celsius, TemperatureUnit::Fahrenheit) => {
                 self.value * CELSIUS_TO_FAHRENHEIT_RATIO + CELSIUS_TO_FAHRENHEIT_OFFSET
             }
@@ -85,7 +85,7 @@ impl Temperature {
                     .convert(TemperatureUnit::Fahrenheit)?
                     .value
             }
-            (&from, &to) => return Err(TemperatureConversionError::NotSupported { from, to }),
+            (from, to) => return Err(TemperatureConversionError::NotSupported { from, to }),
         };
 
         Ok(Self { value, unit })
@@ -102,7 +102,7 @@ impl FromStr for Temperature {
 
         static TEMPERATURE_PATTERN: Lazy<String> = Lazy::new(|| {
             format!(
-                r"(?i)(?P<value>(?:-|−)?\d+(?:\.\d+)?)\s?(?P<unit>{})",
+                r"(?i)^(?P<value>(?:-|−)?\d+(?:\.\d+)?)\s?(?P<unit>{})$",
                 TemperatureUnit::iter()
                     .map(|u| u.symbol_regex().to_string())
                     .collect::<Vec<String>>()
@@ -122,7 +122,7 @@ impl FromStr for Temperature {
                 .parse()
                 .map_err(|err| ParseTemperatureError::Parse {
                     source: err,
-                    value: String::from(value),
+                    value: value.to_owned(),
                 })?;
         let unit = &caps["unit"];
         let unit = TemperatureUnit::iter()

@@ -48,7 +48,7 @@ fn main() {
     let verses = (1..=12).map(|n| {
         vec![
             format!("On the {} day of Christmas", ordinal_number_words[&n]),
-            String::from("My true love sent to me"),
+            "My true love sent to me".to_owned(),
         ]
         .into_iter()
         .chain(

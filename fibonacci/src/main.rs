@@ -24,13 +24,12 @@ fn fibonacci_recursion_tail(n: u8) -> u128 {
 }
 
 fn fibonacci_iterator_fold(n: u8) -> u128 {
-    match (0..=n).fold((0, 0), |(fib_nm1, fib_nm2), n| match n {
+    let (n, _) = (0..=n).fold((0, 0), |(fib_nm1, fib_nm2), n| match n {
         0 => (0, 0),
         1 => (1, 0),
         _ => (fib_nm1 + fib_nm2, fib_nm1),
-    }) {
-        (n, _) => n,
-    }
+    });
+    n
 }
 
 fn fibonacci_iterator_zip_recursion(n: u8) -> u128 {
@@ -82,7 +81,7 @@ fn main() {
         })
     };
 
-    println!("");
+    println!();
     for (i, (name, _f)) in fibonacci_fns.iter().enumerate() {
         println!("{}) {}", i + 1, name);
     }
