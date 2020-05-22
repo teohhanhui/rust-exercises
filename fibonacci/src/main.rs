@@ -12,6 +12,17 @@ fn fibonacci_recursion_naive(n: u8) -> u128 {
     }
 }
 
+fn fibonacci_recursion_tail(n: u8) -> u128 {
+    fn fib_tail(n: u8, a: u128, b: u128) -> u128 {
+        match n {
+            0 => a,
+            _ => fib_tail(n - 1, b, a + b),
+        }
+    }
+
+    fib_tail(n, 0, 1)
+}
+
 fn fibonacci_iterator_fold(n: u8) -> u128 {
     match (0..=n).fold((0, 0), |(fib_nm1, fib_nm2), n| match n {
         0 => (0, 0),
@@ -45,6 +56,7 @@ fn main() {
 
     let fibonacci_fns: OrdMap<&str, fn(u8) -> u128> = ordmap! {};
     let fibonacci_fns = fibonacci_fns.update("recursion (naive)", fibonacci_recursion_naive);
+    let fibonacci_fns = fibonacci_fns.update("recursion (tail)", fibonacci_recursion_tail);
     let fibonacci_fns = fibonacci_fns.update("iterator (fold)", fibonacci_iterator_fold);
     let fibonacci_fns = fibonacci_fns.update(
         "iterator (zip + recursion)",
