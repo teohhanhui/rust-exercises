@@ -25,7 +25,7 @@ fn fibonacci_iterator_fold(n: u8) -> u128 {
 fn fibonacci_iterator_zip_recursion(n: u8) -> u128 {
     fn fib() -> Box<dyn Iterator<Item = u128>> {
         Box::new(
-            iter::once(0 as u128).chain(iter::once(1 as u128)).chain(
+            vec![0, 1].into_iter().chain(
                 iter::once_with(|| {
                     fib()
                         .zip(fib().skip(1))

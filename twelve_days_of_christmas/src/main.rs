@@ -1,10 +1,8 @@
 use console::Term;
 use im::ordmap;
-use im::ordmap::OrdMap;
-use std::iter;
 
 fn main() {
-    let day_gifts: OrdMap<usize, &str> = ordmap! {
+    let day_gifts = ordmap! {
         1 => "partridge in a pear tree",
         2 => "turtle doves",
         3 => "French hens",
@@ -18,7 +16,7 @@ fn main() {
         11 => "pipers piping",
         12 => "drummers drumming"
     };
-    let cardinal_number_words: OrdMap<usize, &str> = ordmap! {
+    let cardinal_number_words = ordmap! {
         1 => "a",
         2 => "two",
         3 => "three",
@@ -32,7 +30,7 @@ fn main() {
         11 => "eleven",
         12 => "twelve"
     };
-    let ordinal_number_words: OrdMap<usize, &str> = ordmap! {
+    let ordinal_number_words = ordmap! {
         1 => "first",
         2 => "second",
         3 => "third",
@@ -47,12 +45,12 @@ fn main() {
         12 => "twelfth"
     };
 
-    let verses = (1..=12).map(|n: usize| {
-        iter::once(format!(
-            "On the {} day of Christmas",
-            ordinal_number_words[&n]
-        ))
-        .chain(iter::once(String::from("My true love sent to me")))
+    let verses = (1..=12).map(|n| {
+        vec![
+            format!("On the {} day of Christmas", ordinal_number_words[&n]),
+            String::from("My true love sent to me"),
+        ]
+        .into_iter()
         .chain(
             (1..=n)
                 .rev()
